@@ -15,6 +15,7 @@ input.calc-input {
 }
 div.display-row {
   height: 30px;
+  margin-top: 10px;
   background: rgba(0,0,0,0.01);
 }
 span.row-label {
@@ -22,6 +23,7 @@ span.row-label {
   font-size: 10px;
   }
 div.button-row { 
+  margin-top: 10px;
   display: flex;
   justify-content: space-between;
 }
