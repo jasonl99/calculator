@@ -12,8 +12,7 @@ module Calculator
 
   get "/:calc" do |context|
     calc = context.params.url["calc"]
-    puts "getting calculator #{calc}"
-    calculator = BasicCalc.new(name: calc)
+    calculator = BasicCalc.find_or_create(name: calc).as(Lattice::Connected::StaticBuffer)
     render "./src/calculator/calculator.slang"
   end
 
