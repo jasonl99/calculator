@@ -5,12 +5,19 @@ module Calculator
   # This is an RPN calculator (you enter both numbers then an operand)
   # there are also text commands (in value_entered) where future
   # expansion could happen.
-  class BasicCalc < Lattice::Connected::StaticBuffer
+  class BasicCalc < Lattice::Connected::ObjectList
     OPERATORS = {"plus": "+", "minus": "-", "divide": "/", "multiply": "*"}
     @max_items = 5
 
+  
     def after_initialize
       (1..max_items).each {|i| items << ""}
+      add_element_class "calculator"
+      @items_dom_id = dom_id("items")
+    end
+
+    def content
+      render "./src/calculator/calculator.slang"
     end
 
     # when the enter key is pressed on the calculate
@@ -40,10 +47,15 @@ module Calculator
       else
       end
       if newval
+        #TODO create a #update_content with an index (-1 last, -2 second to last, etc)
         @items[@items.size-1] = newval.to_s
       else
-        items << value
+        add_content value
       end
+    end
+
+    def render_item(obj,index)
+      render "./src/calculator/line.slang"
     end
 
     # a key was pressed in the input box
@@ -65,7 +77,7 @@ module Calculator
         @items[idx] = @items[idx-1]
       end
       @items[0] = ""
-      redraw_items "entry"
+      redraw_items
     end
 
     def button_pushed(component, index)
@@ -105,17 +117,12 @@ module Calculator
       end
       if event.direction == "In" && event.message_value("action") == "submit"
         value_entered event.message_value("params,entry").as(String)
-        redraw_items "entry"
+        redraw_items
       end
     end
 
-    # @items are the generic way for Lattice::Connected::StaticBuffer to handle
-    # an group of similar items.  Since it's static content, the logic must be provided
-    # here (as opposed to another WebObject item) to update the display when necessary
-    def redraw_items(component : String?)
-      items.values.each_with_index do |item, idx|
-        update({"id"=>dom_id("#{component}-#{idx}"), "value"=>item})
-      end
+    def redraw_items
+      update({"id"=>items_dom_id.as(String), "value"=>item_content})
     end
 
     
@@ -135,7 +142,7 @@ module Calculator
         @items[2] = @items[0]
         @items[1] = save
         @items[0] = ""
-        redraw_items "entry"
+        redraw_items
         result
       end
     end

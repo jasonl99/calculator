@@ -12,8 +12,8 @@ module Calculator
 
   get "/:calc" do |context|
     calc = context.params.url["calc"]
-    calculator = BasicCalc.find_or_create(name: calc).as(Lattice::Connected::StaticBuffer)
-    render "./src/calculator/calculator.slang"
+    calculator = BasicCalc.find_or_create(name: calc).as(Lattice::Connected::ObjectList)
+    render "./src/calculator/page.slang"
   end
 
   Kemal.run
