@@ -11,10 +11,13 @@ end
 module Calculator
 
   get "/:calc" do |context|
+    context.session.string("e","a1")
+    user = Lattice::BasicUser.find_or_create(context.session.id)
+    puts "User: #{user}"
     calc = context.params.url["calc"]
     calculator = BasicCalc.find_or_create(name: calc).as(Lattice::Connected::ObjectList)
     render "./src/calculator/page.slang"
   end
 
-  Kemal.run
+  Lattice::Core::Application.run
 end

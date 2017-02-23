@@ -50,6 +50,7 @@ module Calculator
         #TODO create a #update_content with an index (-1 last, -2 second to last, etc)
         @items[@items.size-1] = newval.to_s
       else
+        puts "Adding #{value}"
         add_content value
       end
     end
@@ -96,8 +97,12 @@ module Calculator
 
     # the big one.  All events come in here.
     def on_event (event, sender)
-      if event.direction == "In" && event.message_value("action") == "click"
-        index = event.dom_item.split("-").last
+      if (user = event.user.as(Lattice::BasicUser)) && user.socket
+        socket = user.socket.as(HTTP::WebSocket)
+      end
+
+      if socket && event.direction == "In" && event.message_value("action") == "click"
+        index = event.dom_item.split(":").last
         if component_id(event.dom_item.as(String)).as(String).starts_with?("delete")
           if (row = index.as(String).to_i?)
             delete_entry(row)
@@ -113,7 +118,7 @@ module Calculator
       end
       if event.direction == "In" && event.message_value("action") == "input"
         value = event.message_value("params,value").as(String)
-        input( value: value, socket: event.socket )
+        input( value: value, socket: socket)
       end
       if event.direction == "In" && event.message_value("action") == "submit"
         value_entered event.message_value("params,entry").as(String)
@@ -122,6 +127,7 @@ module Calculator
     end
 
     def redraw_items
+      puts "Redrawing items".colorize(:black).on(:white)
       update({"id"=>items_dom_id.as(String), "value"=>item_content})
     end
 
