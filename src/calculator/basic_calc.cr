@@ -82,7 +82,12 @@ module Calculator
     end
 
     def button_pushed(component, index)
-      append_value({"id"=>dom_id("text-entry"),"value"=>index})
+      case
+      when index == "point"
+        append_value({"id"=>dom_id("text-entry"),"value"=>"."}) if index == "point"
+      when index
+        append_value({"id"=>dom_id("text-entry"),"value"=>index.to_s}) if index
+      end
     end
 
     def operator_pushed(component, index)
@@ -96,34 +101,30 @@ module Calculator
     end
 
     # the big one.  All events come in here.
-    def on_event (event, sender)
-      if (user = event.user.as(Lattice::BasicUser)) && user.socket
-        socket = user.socket.as(HTTP::WebSocket)
+    def on_event(event)
+
+      action = event.action
+      params = event.params
+      component = event.component
+      index = event.index
+
+      case 
+      when action == "click" && component && component.starts_with?("delete")
+        delete_entry(index) if index
+      when action == "click" && component && component.starts_with?("button")
+        button_pushed component, component.split("-").last
+      when action == "click" && component && component.starts_with?("operator")
+        operator_pushed component, component.split("-").last
+      when action == "input" && (socket = event.user.socket)
+        input(value: params["value"].as(String), socket: socket)
+      when "submit" && ( entry = params["entry"]? )
+        puts "Submit: #{component}: #{entry.as(String)}"
+        value_entered event.params["entry"].as(String)
+        redraw_items
+      else 
+        puts "Unhandled Event #{action} #{params}"
       end
 
-      if socket && event.direction == "In" && event.message_value("action") == "click"
-        index = event.dom_item.split(":").last
-        if component_id(event.dom_item.as(String)).as(String).starts_with?("delete")
-          if (row = index.as(String).to_i?)
-            delete_entry(row)
-          end
-        end
-        component = component_id(event.dom_item.as(String)).as(String)
-        if component.starts_with? "button"
-          button_pushed component, component.split("-").last
-        end
-        if component.starts_with? "operator"
-          operator_pushed component, component.split("-").last
-        end
-      end
-      if event.direction == "In" && event.message_value("action") == "input"
-        value = event.message_value("params,value").as(String)
-        input( value: value, socket: socket)
-      end
-      if event.direction == "In" && event.message_value("action") == "submit"
-        value_entered event.message_value("params,entry").as(String)
-        redraw_items
-      end
     end
 
     def redraw_items
@@ -134,6 +135,7 @@ module Calculator
     
     # given two strings and an operator, see if we can find an answer
     def calculate(string1, string2, operator)
+      puts "Calc: #{string1} #{operator} #{string2}"
       if (num1 = string1.to_s.to_f?) && (num2 = string2.to_s.to_f?)
         result = case operator
         when "+", "plus"; num1 + num2

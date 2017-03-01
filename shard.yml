@@ -9,9 +9,9 @@ targets:
     main: src/calculator.cr
 dependencies:
   lattice-core:
-    # path: /home/jason/crystal/lattice-core
     github: jasonl99/lattice-core
-    branch: master
+    branch: events
+    # path: /home/jason/crystal/lattice-core
 
 crystal: 0.20.5
 
